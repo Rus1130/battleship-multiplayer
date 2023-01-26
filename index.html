@@ -39,9 +39,15 @@
     const sendButton = document.getElementById('sendButton');
 
     sendButton.addEventListener('click', () => {
+        let date = new Date();
+        // get the date in this format:
+        // sent on HH:MM:SS on MM DD, YYYY
+        let sendDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        let sendTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
         let clientMessage = {
             sender: socket.id,
             message: input.value,
+            sendTime: date
         }
         socket.emit('clientMessage', clientMessage);
         input.value = '';
