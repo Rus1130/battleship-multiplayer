@@ -1,14 +1,51 @@
 <style>
+    #input {
+        position: absolute;
+        bottom: 1px;
+        left: 0;
+        height: 50px;
+        width: 90%;
+        resize: none;
+        font-size: 20px;
+    }
+    #input:focus {
+        outline: none;
+    }
 
+    #sendButton {
+        position: absolute;
+        bottom: 1px;
+        right: 0;
+        height: 50px;
+        width: 10%;
+        background-color: #4CAF50;
+        color: black;
+        font-size: 20px;
+        cursor: pointer;
+    }
 </style>
 <head>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
+    <textarea id="input"></textarea>
+    <div id="sendButton">Send</div>
 </body>
 <script>
     var socket = io();
     let userID = undefined;
+
+    const input = document.getElementById('input');
+    const sendButton = document.getElementById('sendButton');
+
+    sendButton.addEventListener('click', () => {
+        let clientMessage = {
+            sender: socket.id,
+            message: input.value
+        }
+        socket.emit('clientMessage', clientMessage);
+        input.value = '';
+    });
 
     socket.on('users', function (data) {
         console.log(data)

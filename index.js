@@ -15,10 +15,7 @@ app.get('/', (req, res) => {
 
 let userArray = [];
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
 
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
-});
+io.on("clientMessage" data => {
+    
+})
