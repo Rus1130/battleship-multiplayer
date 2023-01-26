@@ -5,12 +5,12 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
     cors: {
-        origin: "https://battleship-multiplayer.netlify.app'",
+        origin: "https://Rus1130.github.io'",
         methods: ["GET", "POST"]
     }
 });
 
-app.set('port', process.env.PORT || 3000);
+app.set('port', 3000);
 server.listen(port); 
 
 app.get('/', (req, res) => {
@@ -30,5 +30,3 @@ io.on('connection', (socket) => {
         io.emit('users', userArray);
     });
 });
-
-// fix
