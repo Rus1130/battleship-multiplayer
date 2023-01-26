@@ -1,5 +1,5 @@
 {
-  "homepage": "https://rus1130.github.io/battleship-multiplayer/battleship-multiplayer",
+  "homepage": "https://rus1130.github.io/battleship-multiplayer",
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.5.4"
