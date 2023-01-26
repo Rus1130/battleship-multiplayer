@@ -13,11 +13,8 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-let userArray = [];
-
-
 io.on('connection', (socket) => {
     socket.on('clientMessage', (data) => {
-        console.log(data);
+        console.log('received message from client:', data);
     });
 });

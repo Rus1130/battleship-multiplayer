@@ -50,6 +50,7 @@
             sendTime: date
         }
         socket.emit('clientMessage', clientMessage);
+        console.log("sent message to server")
         input.value = '';
     });
 </script>
