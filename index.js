@@ -16,13 +16,9 @@ app.get('/', (req, res) => {
 let userArray = [];
 
 io.on('connection', (socket) => {
-    userArray.indexOf("disconnected") === -1 ? userArray.push(socket.id) : userArray[userArray.findIndex(user => user === "disconnected")] = socket.id;
-
-    io.emit('users', userArray);
+    console.log('a user connected');
 
     socket.on('disconnect', () => {
-        userArray[userArray.findIndex(user => user === socket.id)] = "disconnected";
-
-        io.emit('users', userArray);
+        console.log('user disconnected');
     });
 });
