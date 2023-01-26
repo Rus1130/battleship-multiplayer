@@ -14,7 +14,9 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    socket.on('clientMessage', (data) => {
-        console.log('received message from client:', data);
+    socket.on('clientMessageData', (data) => {
+        console.log('received clientMessageData from client');
+        io.emit('newMessageData', data);
+        console.log('sent newMessageData to all clients')
     });
 });
