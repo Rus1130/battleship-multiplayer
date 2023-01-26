@@ -28,14 +28,18 @@
     </div>
 </body>
 <script>
-    var socket = io("https://rus1130.github.io/battleship-multiplayer/");
+    var socket = io();
     let userID = undefined;
 
     let currentUsers = document.getElementById("currentUsers");
     let userIDelem = document.getElementById("userID");
 
     socket.on('users', function (data) {
-        currentUsers.innerHTML = `Current Users: ${data.length}`;
-        userIDelem.innerHTML = `User ID: ${data.indexOf(userID)}`;
+        if (userID === undefined) userID = data.indexOf(socket.id) + 1
+
+        let trueUsers = data.filter((user) => user !== 'disconnected');
+
+        currentUsers.innerHTML = `Current Users: ${trueUsers.length}`;
+        userIDelem.innerHTML = `User ID: ${userID}`;
     });
 </script>
