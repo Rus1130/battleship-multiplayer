@@ -16,6 +16,8 @@ app.get('/', (req, res) => {
 let userArray = [];
 
 
-io.on("clientMessage", (data) => {
-
-})
+io.on('connection', (socket) => {
+    socket.on('clientMessage', (data) => {
+        console.log(data);
+    });
+});

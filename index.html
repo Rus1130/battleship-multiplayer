@@ -41,14 +41,9 @@
     sendButton.addEventListener('click', () => {
         let clientMessage = {
             sender: socket.id,
-            message: input.value
+            message: input.value,
         }
         socket.emit('clientMessage', clientMessage);
         input.value = '';
-    });
-
-    socket.on('users', function (data) {
-        console.log(data)
-
     });
 </script>
