@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+
 const io = new Server(server, {
     cors: {
         origin: "https://Rus1130.github.io'",
@@ -11,7 +12,7 @@ const io = new Server(server, {
 });
 
 app.set('port', 3000);
-server.listen(port); 
+server.listen(3000); 
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
