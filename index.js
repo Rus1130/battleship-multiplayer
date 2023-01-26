@@ -16,6 +16,6 @@ app.get('/', (req, res) => {
 let userArray = [];
 
 
-io.on("clientMessage" data => {
-    
+io.on("clientMessage", (data) => {
+
 })
