@@ -127,6 +127,8 @@
         console.log("received messageLog from server");
         data.forEach((message) => {
             isClientMessage = false;
+
+            // /to stuff here
             if(message.userID === userID) isClientMessage = true;
             let newMessage = createNewMessage(message.userID, message.time, message.date, message.message, isClientMessage);
             document.getElementById('messages').prepend(newMessage);
