@@ -30,15 +30,13 @@ io.on('connection', (socket) => {
         messageLog.push(data);
         console.log(`received clientMessageData from client #${data.userID}`);
 
-
         io.emit('newMessageData', data);
         console.log('sent newMessageData to all clients')
-
-
     });
 
     socket.on('disconnect', () => {
         clients--;
+        
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
         io.emit('userIDs', userIDs);
     });
