@@ -28,7 +28,6 @@ io.on('connection', (socket) => {
 
     socket.on('messageLogRequest', (data) => {
         let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
-        console.log(userIDFromSocket)
 
         let filteredMessageLog = [];
         messageLog.forEach((message) => {
@@ -50,15 +49,15 @@ io.on('connection', (socket) => {
         console.log(`received clientMessageData from client #${data.userID}`);
         if(data.recipient === 'all'){
             io.emit('newMessageData', data);
+            console.log('sent newMessageData to all clients')
         } else {
             let recipientSocketID = userIDs[data.recipient - 1];
 
             io.to(recipientSocketID).emit('newMessageData', data);
             io.to(socket.id).emit('newMessageData', data);
-        }
 
-        
-        console.log('sent newMessageData to clients')
+            console.log('sent newMessageData to privileged clients')
+        }
     });
 
     socket.on('requestUserIDs', () => {
