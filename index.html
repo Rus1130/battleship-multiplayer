@@ -44,6 +44,8 @@
 </style>
 <head>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!--enable interest cohort-->
+
 </head>
 <body>
 
@@ -52,7 +54,7 @@
     <div id="sendButton">Send</div>
 </body>
 <script>
-    const socket = io('https://rus1130.github.io/chat-app:80');
+    const socket = io();
 
     const input = document.getElementById('input');
     const sendButton = document.getElementById('sendButton');
