@@ -50,8 +50,7 @@
     <div id="sendButton">Send</div>
 </body>
 <script>
-    var socket = io();
-    let userID = undefined;
+    const socket = io();
 
     const input = document.getElementById('input');
     const sendButton = document.getElementById('sendButton');
@@ -79,7 +78,7 @@
         let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
         let time = `${_date.getHours()}:${_date.getMinutes()}:${_date.getSeconds()}`
         let clientMessageData = {
-            sender: socket.id,
+            sender: userID,
             message: input.value,
             time: time,
             date: date
@@ -87,6 +86,14 @@
         socket.emit('clientMessageData', clientMessageData);
         console.log("sent clientMessageData to server")
         input.value = '';
+    });
+
+    socket.on('messageLog', (data) => {
+        console.log("received messageLog from server");
+        data.forEach((message) => {
+            let newMessage = createNewMessage(message.sender, message.time, message.date, message.message);
+            document.getElementById('messages').prepend(newMessage);
+        });
     });
 
     socket.on('newMessageData', (data) => {
