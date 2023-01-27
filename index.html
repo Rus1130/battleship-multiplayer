@@ -43,7 +43,6 @@
     }
 </style>
 <head>
-    <meta Access-Control-Allow-Origin="https://Rus1130.github.io/chat-app/index.js">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
@@ -53,7 +52,7 @@
     <div id="sendButton">Send</div>
 </body>
 <script>
-    const socket = io('https://Rus1130.github.io/chat-app/index.js');
+    const socket = io('http://localhost:3000');
 
     const input = document.getElementById('input');
     const sendButton = document.getElementById('sendButton');
