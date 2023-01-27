@@ -14,28 +14,21 @@ app.get('/', (req, res) => {
 });
 
 let messageLog = [];
-let userData = [];
+let userIDs = [];
 
-
+let clients = 0;
 
 io.on('connection', (socket) => {
+    clients++;
+    userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
+    io.emit('userIDs', userIDs);
+
     io.to(socket.id).emit('messageLog', messageLog);
-    console.log(`sent messageLog to client ${socket.id}`)
-
-    
-
-    socket.on('usernameValidation', (data) => {
-        if(userData.includes(data)){
-            io.to(socket.id).emit('usernameValidationResponse', false);
-        } else {
-            io.to(socket.id).emit('usernameValidationResponse', true);
-            userData.push(data);
-        }
-    })
+    console.log(`sent messageLog to client #${clients}`)
 
     socket.on('clientMessageData', (data) => {
         messageLog.push(data);
-        console.log(`received clientMessageData from client ${socket.id}`);
+        console.log(`received clientMessageData from client #${data.userID}`);
 
 
         io.emit('newMessageData', data);
@@ -43,4 +36,12 @@ io.on('connection', (socket) => {
 
 
     });
+
+    socket.on('disconnect', () => {
+        clients--;
+        userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
+        io.emit('userIDs', userIDs);
+    });
 });
+
+
