@@ -73,7 +73,10 @@
             socket.emit('messageLogRequest', socket.id);
         }
     });
-    
+
+    socket.on('refreshUserID', (data) => {
+        userID = data.indexOf(socket.id) + 1
+    });
 
     function createNewMessage(user, time, date, message, recipient, isClientMessage = false){
         let newMessage = document.createElement('div');
@@ -106,6 +109,8 @@
         `;
         return newMessage;
     }
+
+
 
     function beginMessagePropagation(){
         let recipient = 'all';

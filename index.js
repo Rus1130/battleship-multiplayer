@@ -19,11 +19,16 @@ let clients = 0;
 
 io.on('connection', (socket) => {
     clients++;
+
+    setInterval(() => {
+        io.emit('refreshUserID', userIDs)
+    }, 50)
+    
+
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
     io.emit('userIDs', userIDs);
 
     console.log(`client #${userIDs.indexOf(socket.id) + 1} connected`);
-
 
 
     socket.on('messageLogRequest', (data) => {
