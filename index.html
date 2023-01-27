@@ -44,8 +44,6 @@
 </style>
 <head>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <!--enable interest cohort-->
-
 </head>
 <body>
 
@@ -54,7 +52,7 @@
     <div id="sendButton">Send</div>
 </body>
 <script>
-    const socket = io();
+    const socket = io('http://localhost:3000');
 
     const input = document.getElementById('input');
     const sendButton = document.getElementById('sendButton');
