@@ -1,16 +1,22 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
+const app = require('http').createServer(handler)
+const io = require('socket.io')(app);
+const fs = require('fs');
 
-server.listen(3000, () => {
+function handler (req, res) {
+    fs.readFile(__dirname + '/index.html',
+    function (err, data) {
+        if (err) {
+            res.writeHead(500);
+            return res.end('Error loading index.html');
+        }
+
+        res.writeHead(200);
+        res.end(data);
+    });
+}
+
+app.listen(3000, () => {
     console.log('listening on *:3000');
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
 });
 
 let messageLog = [];
