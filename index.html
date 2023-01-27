@@ -1,10 +1,5 @@
 <style>
     #input {
-        position: absolute;
-        bottom: 10px;
-        left: 8px;
-        height: 50px;
-        width: calc(90% - 8px);
         resize: none;
         font-size: 20px;
         border-radius: 0;
@@ -13,23 +8,32 @@
     #input:focus {
         outline: none;
     }
+
     #sendButton {
-        position: absolute;
-        bottom: 10px;
-        right: 8px;
-        height: 48px;
-        width: 9%;
         background-color: #4CAF50;
         color: black;
         font-size: 20px;
         cursor: pointer;
         border: 1px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #messageSendUI {
+        display: grid;
+        grid-template-columns: 6fr 1fr;
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        width: calc(100% - 16px);
+        column-gap: 4px;
     }
 
     .message {
         display: grid;
         width: calc(100% - 2px);
-        grid-template-columns: min-content min-content;
+        grid-template-columns: max-content max-content;
         border: 1px solid black;
         margin-bottom: 2px;
         margin-top: 2px;
@@ -48,8 +52,11 @@
 <body>
 
     <div id="messages"></div>
-    <textarea id="input"></textarea>
-    <div id="sendButton">Send</div>
+    <div id="messageSendUI">
+        <textarea id="input"></textarea>
+        <div id="sendButton">Send</div>
+    </div>
+
 </body>
 <script>
     const socket = io('http://localhost:3000');
@@ -60,17 +67,37 @@
     let userID = undefined;
 
     socket.on('userIDs', (data) => {
-        if(userID === undefined) userID = data.indexOf(socket.id) + 1
+        if(userID === undefined){
+            userID = data.indexOf(socket.id) + 1
+            console.log(`Your userID: ${userID}`)
+            socket.emit('messageLogRequest', socket.id);
+        }
     });
+    
 
-    function createNewMessage(user, time, date, message, isClientMessage = false){
+    function createNewMessage(user, time, date, message, recipient, isClientMessage = false){
         let newMessage = document.createElement('div');
         newMessage.title = `${date} at ${time}`;
+
+        let clientIdentifier = '';
+        if(isClientMessage) clientIdentifier = ' (You)';
+
+        let userIdentifier = `User #${user}${clientIdentifier} says:`;
+
+        if(recipient != 'all'){
+            if(recipient == userID){
+                userIdentifier = `From User #${user}:`
+            } else {
+                userIdentifier = `To User #${recipient}:`
+            }
+        }
+
+
         newMessage.innerHTML = `
             <div class='message'>
                 <div style="display: grid;">
                     <div id="name" style="white-space: nowrap;">
-                        User #${user}${isClientMessage == true ? ' (You)' : ''} says:
+                        ${userIdentifier}
                     </div>
                 </div>
                 <br>
@@ -87,14 +114,10 @@
         
         if(inputValue.substring(0, 3) === '/to'){
             recipient = inputValue.split(' ')[1];
-            inputValue = inputValue.substring(4 + recipient.length);
+            inputValue = inputValue.substring(5 + recipient.length);
         }
 
         if(recipient != 'all') recipient = parseInt(recipient);
-
-        console.log(userID, recipient)
-
-        if(inputValue === '' || inputValue === ' ') return alert("You cant say nothing, dipshit.")
 
         let _date = new Date();
         let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
@@ -106,7 +129,7 @@
             date: date,
             recipient: recipient
         }
-        console.log(clientMessageData)
+
         socket.emit('clientMessageData', clientMessageData);
         console.log("sent clientMessageData to server")
         input.value = '';
@@ -123,15 +146,16 @@
         }
     });
 
-    socket.on('messageLog', (data) => {
+    socket.on('messageLogResponse', (data) => {
         console.log("received messageLog from server");
         data.forEach((message) => {
             isClientMessage = false;
 
-            // /to stuff here
             if(message.userID === userID) isClientMessage = true;
-            let newMessage = createNewMessage(message.userID, message.time, message.date, message.message, isClientMessage);
+            let newMessage = createNewMessage(message.userID, message.time, message.date, message.message, message.recipient, isClientMessage);
             document.getElementById('messages').prepend(newMessage);
+
+            
         });
     });
 
@@ -141,7 +165,7 @@
         isClientMessage = false;
         if(data.userID === userID) isClientMessage = true;
 
-        let newMessage = createNewMessage(data.userID, data.time, data.date, data.message, isClientMessage);
+        let newMessage = createNewMessage(data.userID, data.time, data.date, data.message, data.recipient, isClientMessage);
         document.getElementById('messages').prepend(newMessage);
     });
 

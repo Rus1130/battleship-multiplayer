@@ -22,15 +22,43 @@ io.on('connection', (socket) => {
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
     io.emit('userIDs', userIDs);
 
-    io.to(socket.id).emit('messageLog', messageLog);
-    console.log(`sent messageLog to client #${clients}`)
+    console.log(`client #${userIDs.indexOf(socket.id) + 1} connected`);
+
+
+
+    socket.on('messageLogRequest', (data) => {
+        let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
+        console.log(userIDFromSocket)
+
+        let filteredMessageLog = [];
+        messageLog.forEach((message) => {
+            if(message.recipient == 'all'){
+                filteredMessageLog.push(message);
+            } else if(message.recipient == userIDFromSocket || message.userID == userIDFromSocket){
+                filteredMessageLog.push(message);
+            }
+        });
+
+
+        io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
+        console.log(`sent message log to client #${userIDs.indexOf(socket.id) + 1}`)
+    });
+
 
     socket.on('clientMessageData', (data) => {
         messageLog.push(data);
         console.log(`received clientMessageData from client #${data.userID}`);
+        if(data.recipient === 'all'){
+            io.emit('newMessageData', data);
+        } else {
+            let recipientSocketID = userIDs[data.recipient - 1];
 
-        io.emit('newMessageData', data);
-        console.log('sent newMessageData to all clients')
+            io.to(recipientSocketID).emit('newMessageData', data);
+            io.to(socket.id).emit('newMessageData', data);
+        }
+
+        
+        console.log('sent newMessageData to clients')
     });
 
     socket.on('requestUserIDs', () => {
