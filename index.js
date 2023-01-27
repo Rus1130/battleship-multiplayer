@@ -2,6 +2,11 @@ const app = require('http').createServer(handler)
 const io = require('socket.io')(app);
 const fs = require('fs');
 
+
+app.listen(80, () => {
+    console.log('listening on *:3000');
+});
+
 function handler (req, res) {
     fs.readFile(__dirname + '/index.html',
     function (err, data) {
@@ -14,10 +19,6 @@ function handler (req, res) {
         res.end(data);
     });
 }
-
-app.listen(3000, () => {
-    console.log('listening on *:3000');
-});
 
 let messageLog = [];
 let userIDs = [];
