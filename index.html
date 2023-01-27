@@ -81,17 +81,32 @@
     }
 
     function beginMessagePropagation(){
-        if(input.value === '') return alert("You cant say nothing, dipshit.")
+        let recipient = 'all';
+        let inputValue = input.value;
+
+        
+        if(inputValue.substring(0, 3) === '/to'){
+            recipient = inputValue.split(' ')[1];
+            inputValue = inputValue.substring(4 + recipient.length);
+        }
+
+        if(recipient != 'all') recipient = parseInt(recipient);
+
+        console.log(userID, recipient)
+
+        if(inputValue === '' || inputValue === ' ') return alert("You cant say nothing, dipshit.")
+
         let _date = new Date();
         let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
         let time = `${_date.getHours()}:${_date.getMinutes()}:${String(_date.getSeconds()).padStart(2, '0')}`
         let clientMessageData = {
             userID: userID,
-            message: input.value,
+            message: inputValue,
             time: time,
             date: date,
-            recipient: 'all'
+            recipient: recipient
         }
+        console.log(clientMessageData)
         socket.emit('clientMessageData', clientMessageData);
         console.log("sent clientMessageData to server")
         input.value = '';
@@ -127,4 +142,5 @@
         let newMessage = createNewMessage(data.userID, data.time, data.date, data.message, isClientMessage);
         document.getElementById('messages').prepend(newMessage);
     });
+
 </script>

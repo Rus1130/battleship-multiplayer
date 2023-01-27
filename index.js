@@ -33,6 +33,10 @@ io.on('connection', (socket) => {
         console.log('sent newMessageData to all clients')
     });
 
+    socket.on('requestUserIDs', () => {
+        io.to(socket.id).emit('userIDsResponse', userIDs);
+    })
+
     socket.on('disconnect', () => {
         clients--;
         
