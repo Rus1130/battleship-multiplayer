@@ -1,3 +1,5 @@
+const e = require('express');
+
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -50,19 +52,32 @@ io.on('connection', (socket) => {
 
 
     socket.on('clientMessageData', (data) => {
-        messageLog.push(data);
-        console.log(`received clientMessageData from client #${data.userID}`);
-        if(data.recipient === 'all'){
-            io.emit('newMessageData', data);
-            console.log('sent newMessageData to all clients')
+
+
+        let recipientSocketID = userIDs[data.recipient - 1];
+        if(recipientSocketID == undefined && data.recipient != 'all'){
+            data.flags.invalid = true
+            let prematureData = data
+            
+            io.to(socket.id).emit('newMessageData', prematureData);
+            console.log(`Error: client #${data.userID} received flags.invalid`)
         } else {
-            let recipientSocketID = userIDs[data.recipient - 1];
 
-            io.to(recipientSocketID).emit('newMessageData', data);
-            io.to(socket.id).emit('newMessageData', data);
+            if(data.recipient === 'all'){
+                io.emit('newMessageData', data);
+                console.log('sent newMessageData to all clients')
+            } else {
+    
+                io.to(recipientSocketID).emit('newMessageData', data);
+                io.to(socket.id).emit('newMessageData', data);
+    
+                console.log('sent newMessageData to privileged clients')
+            }
 
-            console.log('sent newMessageData to privileged clients')
+            messageLog.push(data);
         }
+
+
     });
 
     socket.on('requestUserIDs', () => {

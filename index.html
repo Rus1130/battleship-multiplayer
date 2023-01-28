@@ -115,11 +115,12 @@
     function beginMessagePropagation(){
         let recipient = 'all';
         let inputValue = input.value;
-
         
         if(inputValue.substring(0, 3) === '/to'){
             recipient = inputValue.split(' ')[1];
             inputValue = inputValue.substring(5 + recipient.length);
+
+
         }
 
         if(recipient != 'all') recipient = parseInt(recipient);
@@ -132,9 +133,13 @@
             message: inputValue,
             time: time,
             date: date,
-            recipient: recipient
+            recipient: recipient,
+            flags: {
+                invalid: false,
+                isClientMessage: false
+            }
         }
-
+        
         socket.emit('clientMessageData', clientMessageData);
         console.log("sent clientMessageData to server")
         input.value = '';
@@ -155,7 +160,6 @@
         console.log("received messageLog from server");
         data.forEach((message) => {
             isClientMessage = false;
-
             if(message.userID === userID) isClientMessage = true;
             let newMessage = createNewMessage(message.userID, message.time, message.date, message.message, message.recipient, isClientMessage);
             document.getElementById('messages').prepend(newMessage);
@@ -165,8 +169,9 @@
     });
 
     socket.on('newMessageData', (data) => {
+       if(data.flags.invalid === true) return alert('Invalid recipient.')
         console.log("received newMessageData from server");
-
+        
         isClientMessage = false;
         if(data.userID === userID) isClientMessage = true;
 
