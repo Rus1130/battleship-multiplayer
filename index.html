@@ -139,9 +139,9 @@
                 isClientMessage: false
             }
         }
-        
         socket.emit('clientMessageData', clientMessageData);
-        console.log("sent clientMessageData to server")
+        if(recipient == 'all') console.log("sent clientMessageData to server")
+        else console.log("sent privileged clientMessageData to server")
         input.value = '';
     }
 
@@ -171,7 +171,6 @@
     socket.on('newMessageData', (data) => {
        if(data.flags.invalid === true) return alert('Invalid recipient.')
         console.log("received newMessageData from server");
-        
         isClientMessage = false;
         if(data.userID === userID) isClientMessage = true;
 
