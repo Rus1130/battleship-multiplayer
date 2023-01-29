@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
             console.log(`Error: client #${data.userID} received flags.invalidRecipient`)
         } else {
 
-            if(data.recipient === 'all'){
+            if(data.recipient === 'all'){ 
                 io.emit('newMessageData', data);
                 console.log('sent messageData to all clients')
             } else {
