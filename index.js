@@ -1,5 +1,3 @@
-const e = require('express');
-
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -10,7 +8,7 @@ app.get('/', function(req, res){
 
 
 http.listen(3000, () => {
-    console.log('listening on *:3000');
+    console.log('Server started');
 });
 
 
@@ -47,37 +45,44 @@ io.on('connection', (socket) => {
 
 
         io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
-        console.log(`sent message log to client #${userIDs.indexOf(socket.id) + 1}`)
+        console.log(`sent messageLog to client #${userIDs.indexOf(socket.id) + 1}`)
     });
+
+    socket.on('printMessageLog', (data) => {
+        console.log(`User #${data[0]} on socketID ${data[1]} requested message log:`, messageLog);
+    })
 
 
     socket.on('clientMessageData', (data) => {
-
-
         let recipientSocketID = userIDs[data.recipient - 1];
-        if(recipientSocketID == undefined && data.recipient != 'all'){
-            data.flags.invalid = true
+
+        if(data.message === ''){
+            data.flags.invalidContent = true
             let prematureData = data
             
             io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: client #${data.userID} received flags.invalid`)
+            console.log(`Error: client #${data.userID} received flags.invalidContent`)
+        } else if(recipientSocketID == undefined && data.recipient != 'all'){
+            data.flags.invalidRecipient = true
+            let prematureData = data
+            
+            io.to(socket.id).emit('newMessageData', prematureData);
+            console.log(`Error: client #${data.userID} received flags.invalidRecipient`)
         } else {
 
             if(data.recipient === 'all'){
                 io.emit('newMessageData', data);
-                console.log('sent newMessageData to all clients')
+                console.log('sent messageData to all clients')
             } else {
     
                 io.to(recipientSocketID).emit('newMessageData', data);
                 io.to(socket.id).emit('newMessageData', data);
     
-                console.log('sent newMessageData to privileged clients')
+                console.log('sent messageData to privileged clients')
             }
 
             messageLog.push(data);
         }
-
-
     });
 
     socket.on('requestUserIDs', () => {
@@ -85,6 +90,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
+        console.log(`client #${userIDs.indexOf(socket.id) + 1} disconnected`);
         clients--;
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
