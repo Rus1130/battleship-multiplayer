@@ -49,27 +49,29 @@ io.on('connection', (socket) => {
     });
 
     socket.on('printMessageLog', (data) => {
-        console.log(`User #${data[0]} on socketID ${data[1]} requested message log:`, messageLog);
+        console.log(`Client #${data[0]} on socketID ${data[1]} requested message log:`, messageLog);
     })
 
 
     socket.on('clientMessageData', (data) => {
         let recipientSocketID = userIDs[data.recipient - 1];
 
+        let messageCommand = data.message.split(" ")[0];
+
+        let prematureData;
         if(data.message === ''){
             data.flags.invalidContent = true
-            let prematureData = data
-            
+            prematureData = data
             io.to(socket.id).emit('newMessageData', prematureData);
             console.log(`Error: client #${data.userID} received flags.invalidContent`)
-        } else if(recipientSocketID == undefined && data.recipient != 'all'){
+
+        } else if((recipientSocketID == undefined && data.recipient != 'all') || (data.recipient == data.userID)){
             data.flags.invalidRecipient = true
-            let prematureData = data
-            
+            prematureData = data;
             io.to(socket.id).emit('newMessageData', prematureData);
             console.log(`Error: client #${data.userID} received flags.invalidRecipient`)
-        } else {
 
+        } else {
             if(data.recipient === 'all'){ 
                 io.emit('newMessageData', data);
                 console.log('sent messageData to all clients')
