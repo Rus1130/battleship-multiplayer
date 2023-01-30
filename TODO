@@ -1,0 +1,8 @@
+[X] - public/private rooms
+    [X] - room passwords (if private)
+    [X] - room admin commands
+        [X] - room banning
+        [X] - room name
+        [X] - room description
+[x] - system messages
+[X] - display name
