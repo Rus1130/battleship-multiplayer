@@ -3,3 +3,18 @@
     [X] - room description
 [x] - system messages
 [X] - display name
+
+
+
+
+                if(data[roomID].type == 'private'){
+                    let roomPassword = prompt("Enter the room password:")
+                } else {
+                    allowRoomEntry = true;
+                }
+
+                if(allowRoomEntry){
+
+                } else {
+                    alert("You do not have permission to enter this room.")
+                }

@@ -15,10 +15,19 @@ http.listen(3000, () => {
 let messageLog = [];
 let userIDs = [];
 
+let rooms = {
+    "0": {
+        type: 'public',
+        password: ''
+    }
+};
+
 let clients = 0;
 
 io.on('connection', (socket) => {
     clients++;
+
+    let roomID = 0;
 
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
@@ -30,19 +39,51 @@ io.on('connection', (socket) => {
 
     console.log(`client #${userIDs.indexOf(socket.id) + 1} connected`);
 
+    socket.on('switchRoom', (data) => {
+        let response;
+        if(rooms[data] === undefined){
+            response = 'invalidRoomID';
+        } else {
+            response = rooms[data]
+            roomID = data;
+        }
+
+        io.to(socket.id).emit('roomSwitchResponse', [response, roomID]);
+    });
+
+    socket.on('createRoom', (data) => {
+        roomID = data[0]
+        let roomType = data[1]
+        let roomPassword = data[2]
+
+        if(rooms[roomID] !== undefined || roomID === null){
+            io.to(socket.id).emit('roomCreationResponse', 'roomIDTaken');
+        } else if(roomType == null || (roomType != 'public' && roomType != 'private')){
+            io.to(socket.id).emit('roomCreationResponse', 'invalidRoomType');
+        } else if(roomType == 'private' && roomPassword == null){
+            io.to(socket.id).emit('roomCreationResponse', 'invalidRoomPassword');
+        } else {
+            rooms[roomID] = {
+                type: roomType,
+                password: roomPassword
+            }
+            io.to(socket.id).emit('roomCreationResponse', roomID);
+        }
+    })
+
 
     socket.on('messageLogRequest', (data) => {
         let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
 
         let filteredMessageLog = [];
         messageLog.forEach((message) => {
+            if(message.roomID != roomID) return;
             if(message.recipient == 'all'){
                 filteredMessageLog.push(message);
             } else if(message.recipient == userIDFromSocket || message.userID == userIDFromSocket){
                 filteredMessageLog.push(message);
             }
         });
-
 
         io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
         console.log(`sent messageLog to client #${userIDs.indexOf(socket.id) + 1}`)
@@ -55,8 +96,6 @@ io.on('connection', (socket) => {
 
     socket.on('clientMessageData', (data) => {
         let recipientSocketID = userIDs[data.recipient - 1];
-
-        let messageCommand = data.message.split(" ")[0];
 
         let prematureData;
         if(data.message === ''){
