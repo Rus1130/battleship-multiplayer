@@ -68,6 +68,7 @@
     const sendButton = document.getElementById('sendButton');
 
     let userID = undefined;
+    let roomID = '0';
 
     socket.on('userIDs', (data) => {
         if(userID === undefined){
