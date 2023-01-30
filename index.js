@@ -12,83 +12,48 @@ http.listen(3000, () => {
 });
 
 
-let messageLog = [];
+let messageLog = {"0": [
+]};
+
 let userIDs = [];
 
 let clients = 0;
 
+function makeConsoleMessage(message){
+    let _date = new Date();
+    let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
+    let time = `${String(_date.getHours()).padStart(2, '0')}:${String(_date.getMinutes()).padStart(2, '0')}:${String(_date.getSeconds()).padStart(2, '0')}`
+
+    let clientMessageData = {
+        userID: 'Console',
+        message: message,
+        time: time,
+        date: date,
+        roomID: roomID,
+    }
+}
+
 io.on('connection', (socket) => {
     clients++;
-
-    setInterval(() => {
-        io.emit('refreshUserID', userIDs)
-    }, 50)
-    
-
+    console.log(`client #${clients} connected`);
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
     io.emit('userIDs', userIDs);
 
-    console.log(`client #${userIDs.indexOf(socket.id) + 1} connected`);
-
 
     socket.on('messageLogRequest', (data) => {
-        let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
-
-        let filteredMessageLog = [];
-        messageLog.forEach((message) => {
-            if(message.recipient == 'all'){
-                filteredMessageLog.push(message);
-            } else if(message.recipient == userIDFromSocket || message.userID == userIDFromSocket){
-                filteredMessageLog.push(message);
-            }
-        });
+        if(messageLog[data] === undefined){
+            messageLog[data] = [];
+        }
 
 
-        io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
-        console.log(`sent messageLog to client #${userIDs.indexOf(socket.id) + 1}`)
-    });
-
-    socket.on('printMessageLog', (data) => {
-        console.log(`Client #${data[0]} on socketID ${data[1]} requested message log:`, messageLog);
+        // FIX
+        socket.emit('messageLogResponse', messageLog[data]);
     })
 
+    socket.on('newMessage', (data) => {
 
-    socket.on('clientMessageData', (data) => {
-        let recipientSocketID = userIDs[data.recipient - 1];
+        // message code
 
-        let messageCommand = data.message.split(" ")[0];
-
-        let prematureData;
-        if(data.message === ''){
-            data.flags.invalidContent = true
-            prematureData = data
-            io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: client #${data.userID} received flags.invalidContent`)
-
-        } else if((recipientSocketID == undefined && data.recipient != 'all') || (data.recipient == data.userID)){
-            data.flags.invalidRecipient = true
-            prematureData = data;
-            io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: client #${data.userID} received flags.invalidRecipient`)
-
-        } else {
-            if(data.recipient === 'all'){ 
-                io.emit('newMessageData', data);
-                console.log('sent messageData to all clients')
-            } else {
-    
-                io.to(recipientSocketID).emit('newMessageData', data);
-                io.to(socket.id).emit('newMessageData', data);
-    
-                console.log('sent messageData to privileged clients')
-            }
-
-            messageLog.push(data);
-        }
-    });
-
-    socket.on('requestUserIDs', () => {
-        io.to(socket.id).emit('userIDsResponse', userIDs);
     })
 
     socket.on('disconnect', () => {

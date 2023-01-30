@@ -61,13 +61,50 @@
 
 </body>
 <script>
-    const socket = io('localhost:3000');
     
+    const socket = io('localhost:3000');
 
     const input = document.getElementById('input');
     const sendButton = document.getElementById('sendButton');
+    const messages = document.getElementById('messages');
 
     let userID = undefined;
+    let roomID = '0';
+
+    getMessageLog(roomID);
+
+    function createMessage(){
+        let _date = new Date();
+        let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
+        let time = `${String(_date.getHours()).padStart(2, '0')}:${String(_date.getMinutes()).padStart(2, '0')}:${String(_date.getSeconds()).padStart(2, '0')}`
+
+        let clientMessageData = {
+            userID: userID,
+            socketID: socket.id,
+            message: input.value,
+            time: time,
+            date: date,
+            roomID: roomID,
+            flags: {
+                noContent: false,
+            }
+        }
+        socket.emit('newMessage', clientMessageData);
+    }
+
+    function changeRoomID(newRoomID){
+        roomID = newRoomID;
+        getMessageLog(roomID);
+    }
+
+    function getMessageLog(roomID){
+        socket.emit('messageLogRequest', roomID);
+    }
+
+    socket.on('messsageLogResponse', (data) => {
+        messages.innerHTML = '';
+        console.log(data)
+    });
 
     socket.on('userIDs', (data) => {
         if(userID === undefined){
@@ -81,109 +118,18 @@
         userID = data.indexOf(socket.id) + 1
     });
 
-    function createNewMessage(user, time, date, message, recipient, selfMessage){
-        let newMessage = document.createElement('div');
-        newMessage.title = `${date} at ${time}`;
-
-        let clientIdentifier = '';
-        if(selfMessage) clientIdentifier = ' (You)';
-
-        let userIdentifier = `User #${user}${clientIdentifier} says:`;
-
-        if(recipient != 'all'){
-            if(recipient == userID){
-                userIdentifier = `From User #${user}:`
-            } else {
-                userIdentifier = `To User #${recipient}:`
-            }
-        }
-
-
-        newMessage.innerHTML = `
-            <div class='message'>
-                <div style="display: grid;">
-                    <div id="name" style="white-space: nowrap;">
-                        ${userIdentifier}
-                    </div>
-                </div>
-                <br>
-                <div id="body">${message}</div>
-            </div>
-        `;
-        return newMessage;
-    }
-
-
-
-    function beginMessagePropagation(){
-        let recipient = 'all';
-        let inputValue = input.value;
-
-
-        if(inputValue === '/pmg'){
-            let data = [userID, socket.id]
-            socket.emit('printMessageLog', data)
-        } else if(inputValue.substring(0, 3) === '/to'){
-            recipient = inputValue.split(' ')[1];
-            inputValue = inputValue.substring(5 + recipient.length);
-        }        
-        
-
-        if(recipient != 'all') recipient = parseInt(recipient);
-
-        let _date = new Date();
-        let date = `${_date.getDate()}/${_date.getMonth() + 1}/${_date.getFullYear()}`;
-        let time = `${String(_date.getHours()).padStart(2, '0')}:${String(_date.getMinutes()).padStart(2, '0')}:${String(_date.getSeconds()).padStart(2, '0')}`
-        let clientMessageData = {
-            userID: userID,
-            socketID: socket.id,
-            message: inputValue,
-            time: time,
-            date: date,
-            recipient: recipient,
-            flags: {
-                invalidRecipient: false,
-                invalidContent: false,
-            }
-        }
-        socket.emit('clientMessageData', clientMessageData);
-        if(recipient == 'all') console.log("sent messageData to server")
-        else console.log("sent privileged messageData to server")
-        input.value = '';
-    }
 
     sendButton.addEventListener('click', () => {
-        beginMessagePropagation();
+        createMessage()
+        input.value = ''
     });
 
-    input.addEventListener('keydown', (event) => {
-        if(event.key === 'Enter'){
-            event.preventDefault();
-            beginMessagePropagation();
+    input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+            e.preventDefault();
+            createMessage()
+            input.value = ''
         }
-    });
-
-    socket.on('messageLogResponse', (data) => {
-        console.log("received messageLog from server");
-        data.forEach((message) => {
-            selfMessage = false;
-            if(message.userID === userID) selfMessage = true;
-            let newMessage = createNewMessage(message.userID, message.time, message.date, message.message, message.recipient, selfMessage);
-            document.getElementById('messages').prepend(newMessage);
-        });
-    });
-
-    socket.on('newMessageData', (data) => {
-        if(data.flags.invalidContent) return alert('Invalid message content.');
-        if(data.flags.invalidRecipient) return alert('Invalid recipient.');
-
-        console.log("received messageData from server");
-        selfMessage = false;
-        if(data.userID === userID) selfMessage = true;
-
-        let newMessage = createNewMessage(data.userID, data.time, data.date, data.message, data.recipient, selfMessage);
-        document.getElementById('messages').prepend(newMessage);
-       
     });
 
 </script>

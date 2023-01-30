@@ -3,3 +3,21 @@
     [X] - room description
 [x] - system messages
 [X] - display name
+
+
+        let newMessage = document.createElement('div');
+        newMessage.title = `${clientMessageData.time} on ${clientMessageData.date}`;
+        let userIdentifier = `User #${userID}`
+
+        newMessage.innerHTML = `
+            <div class='message'>
+                <div style="display: grid;">
+                    <div id="name" style="white-space: nowrap;">
+                        ${userIdentifier}
+                    </div>
+                </div>
+                <br>
+                <div id="body">${clientMessageData.message}</div>
+            </div>
+        `;
+
