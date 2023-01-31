@@ -99,7 +99,6 @@
         if(userID === undefined){
             userID = data.indexOf(socket.id) + 1
             console.log(`Your userID: ${userID}`)
-            socket.emit('messageLogRequest', socket.id);
         }
     });
 
