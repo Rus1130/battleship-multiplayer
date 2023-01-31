@@ -17,7 +17,7 @@ let userIDs = [];
 let displayNames = {};
 
 let rooms = {
-    "0": {
+    "Global": {
         type: 'public',
         password: ''
     }
@@ -28,7 +28,7 @@ let clients = 0;
 io.on('connection', (socket) => {
     clients++;
 
-    let roomID = 0;
+    let roomID = 'Global';
 
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
@@ -75,7 +75,6 @@ io.on('connection', (socket) => {
 
     socket.on('messageLogRequest', (data) => {
         let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
-
         let filteredMessageLog = [];
         messageLog.forEach((message) => {
             if(message.roomID != roomID) return;
