@@ -2,3 +2,5 @@
     [O] - room passwords (if private)
 [O] - system messages
 [X] - display name
+
+[X] - minigames

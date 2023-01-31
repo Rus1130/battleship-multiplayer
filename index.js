@@ -14,6 +14,7 @@ http.listen(3000, () => {
 
 let messageLog = [];
 let userIDs = [];
+let displayNames = {};
 
 let rooms = {
     "0": {
@@ -90,7 +91,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('printMessageLog', (data) => {
-        console.log(`Client #${data[0]} on socketID ${data[1]} requested message log:`, messageLog);
+        console.log(`Client #${data[0]} on socketID ${data[1]} requested message log:`);
+        console.log(messageLog);
+    })
+
+    socket.on("printRoomList", (data) => {
+        console.log(`Client #${data[0]} on socketID ${data[1]} requested room list:`);
+        console.log(rooms);
     })
 
 

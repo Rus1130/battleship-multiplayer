@@ -75,6 +75,7 @@
 </body>
 <script>
     const socket = io('localhost:3000');
+
     let commandDescriptions = [
         "/help - Displays a list of commands.",
         "/room [roomID] - Switches to the specified room.",
@@ -138,25 +139,26 @@
     }
 
     socket.on('roomSwitchResponse', (data) => {
-        if(data == 'invalidRoomID'){
-            sendConsoleMessage('Invalid room ID.')
+        if(data[0] == 'invalidRoomID'){
+            sendConsoleMessage('No room with that ID. Create it with /createroom.')
         } else {
             if(data[0].type == 'public'){
                 roomID = data[1][0];
                 roomDisplay.innerHTML = `Room: ${roomID}`;
                 messages.innerHTML = '';
                 socket.emit('messageLogRequest', socket.id);
-                sendConsoleMessage(`You have joined room ${roomID}.`)
+                sendConsoleMessage(`You have joined room "${roomID}".`)
             } else {
+                console.log(data)
                 let password = prompt('Enter password for room:');
                 if(password != data[0].password){
                     sendConsoleMessage('Incorrect password.')
                 } else {
-                    roomID = data[1][0];
+                    roomID = data[1];
                     roomDisplay.innerHTML = `Room: ${roomID}`;
                     messages.innerHTML = '';
                     socket.emit('messageLogRequest', socket.id);
-                    sendConsoleMessage(`You have joined room ${roomID}.`)
+                    sendConsoleMessage(`You have joined room "${roomID}".`)
                     console.log(`Client #${userID} has switched to private room ${roomID}.`)
                 }
             }
@@ -169,7 +171,7 @@
             <div class='message'>
                 <div style="display: grid;">
                     <div id="name" style="white-space: nowrap;">
-                        Console:
+                        From Console:
                     </div>
                 </div>
                 <br>
@@ -207,7 +209,10 @@
         if(command === '/pmg'){
             let data = [userID, socket.id]
             socket.emit('printMessageLog', data)
-        } else if(command === '/to'){
+        } else if(command === '/prl'){
+            let data = [userID, socket.id]
+            socket.emit('printRoomList', data)
+        }else if(command === '/to'){
             recipient = inputValue.split(' ')[1];
             inputValue = inputValue.substring(5 + recipient.length);
         } else if(command === '/room'){
@@ -224,7 +229,7 @@
             sendConsoleMessage(commandDescriptions.join("<br>"))
         }
 
-        const doNotSendMessageCommands = ['/room', '/createroom', '/pmg', '/help']
+        const doNotSendMessageCommands = ['/room', '/createroom', '/pmg', '/help', '/prl']
         
 
         if(recipient != 'all') recipient = parseInt(recipient);
