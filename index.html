@@ -97,14 +97,14 @@
 
     socket.on('userIDs', (data) => {
         if(userID === undefined){
-            userID = data.indexOf(socket.id) + 1
+            userID = socket.id
             console.log(`Your userID: ${userID}`)
             socket.emit('messageLogRequest', socket.id);
         }
     });
 
     socket.on('refreshUserID', (data) => {
-        userID = data.indexOf(socket.id) + 1
+        userID = socket.id
     });
 
     sendConsoleMessage("Welcome to the chatroom! Type '/help' for a list of commands.")
@@ -116,7 +116,7 @@
         let clientIdentifier = '';
         if(selfMessage) clientIdentifier = ' (You)';
 
-        let userIdentifier = `User #${user}${clientIdentifier} says:`;
+        let userIdentifier = `${user}${clientIdentifier} says:`;
 
         if(recipient != 'all'){
             if(recipient == userID){
@@ -154,7 +154,7 @@
                 setTimeout(() => {
                     sendConsoleMessage(`You have joined room "${roomID}".`)
                 }, 1)
-                console.log(`Client #${userID} has switched to public room ${roomID}.`)
+                console.log(`Client ${userID} has switched to public room ${roomID}.`)
                 
             } else {
                 let password = prompt('Enter password for room:');
@@ -168,7 +168,7 @@
                     setTimeout(() => {
                         sendConsoleMessage(`You have joined room "${roomID}".`)
                     }, 1)
-                    console.log(`Client #${userID} has switched to private room ${roomID}.`)
+                    console.log(`Client ${userID} has switched to private room ${roomID}.`)
                 }
             }
         }
@@ -218,12 +218,14 @@
         if(command === '/pmg'){
             let data = [userID, socket.id]
             socket.emit('printMessageLog', data)
+
         } else if(command === '/prl'){
             let data = [userID, socket.id]
             socket.emit('printRoomList', data)
+
         }else if(command === '/to'){
             recipient = inputValue.split(' ')[1];
-            inputValue = inputValue.substring(5 + recipient.length);
+            inputValue = inputValue.split(' ')[2];
         } else if(command === '/room'){
             let id = inputValue.split(' ')[1];
             if(roomID == id) sendConsoleMessage('You are already in that room.')
