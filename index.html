@@ -282,8 +282,8 @@
     });
 
     socket.on('newMessageData', (data) => {
-        if(data.flags.invalidContent) return alert('Invalid message content.');
-        if(data.flags.invalidRecipient) return alert('Invalid recipient.');
+        if(data.flags.invalidContent) return sendConsoleMessage('Invalid message content.');
+        if(data.flags.invalidRecipient) return sendConsoleMessage('Invalid recipient.');
 
         if(data.roomID == roomID){
             console.log("received messageData from server");
