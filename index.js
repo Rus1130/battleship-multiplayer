@@ -13,7 +13,9 @@ http.listen(3000, () => {
 
 
 let messageLog = [];
+
 let userIDs = [];
+let userAliases = {};
 let displayNames = {};
 
 let rooms = {
@@ -28,6 +30,9 @@ let clients = 0;
 io.on('connection', (socket) => {
     clients++;
 
+    userAliases[socket.id] = socket.id;
+    console.log(userAliases);
+
     let roomID = 'Global';
 
     setInterval(() => {
@@ -38,7 +43,7 @@ io.on('connection', (socket) => {
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
     io.emit('userIDs', userIDs);
 
-    console.log(`client #${userIDs.indexOf(socket.id) + 1} connected`);
+    console.log(`${socket.id} connected`);
 
     socket.on('switchRoom', (data) => {
         let response;
@@ -74,47 +79,48 @@ io.on('connection', (socket) => {
 
 
     socket.on('messageLogRequest', (data) => {
-        let userIDFromSocket = userIDs.indexOf(socket.id) + 1;
+        let userID = socket.id;
         let filteredMessageLog = [];
         messageLog.forEach((message) => {
             if(message.roomID != roomID) return;
             if(message.recipient == 'all'){
                 filteredMessageLog.push(message);
-            } else if(message.recipient == userIDFromSocket || message.userID == userIDFromSocket){
+            } else if(message.recipient == userID || message.userID == userID){
                 filteredMessageLog.push(message);
             }
         });
 
         io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
-        console.log(`sent messageLog to client #${userIDs.indexOf(socket.id) + 1}`)
+        console.log(`sent messageLog to client ${socket.id}`)
     });
 
     socket.on('printMessageLog', (data) => {
-        console.log(`Client #${data[0]} on socketID ${data[1]} requested message log:`);
+        console.log(`Client ${data} requested message log:`);
         console.log(messageLog);
     })
 
     socket.on("printRoomList", (data) => {
-        console.log(`Client #${data[0]} on socketID ${data[1]} requested room list:`);
+        console.log(`Client ${data} requested room list:`);
         console.log(rooms);
     })
 
 
     socket.on('clientMessageData', (data) => {
-        let recipientSocketID = userIDs[data.recipient - 1];
+        let recipientSocketID = data.recipient;
+        console.log(data.recipient, data.userID, recipientSocketID)
 
         let prematureData;
         if(data.message === ''){
             data.flags.invalidContent = true
             prematureData = data
             io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: client #${data.userID} received flags.invalidContent`)
+            console.log(`Error: Client ${data.userID} received flags.invalidContent`)
 
-        } else if((recipientSocketID == undefined && data.recipient != 'all') || (data.recipient == data.userID)){
+        } else if((data.recipient == undefined && data.recipient != 'all') || (data.recipient == data.userID)){
             data.flags.invalidRecipient = true
             prematureData = data;
             io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: client #${data.userID} received flags.invalidRecipient`)
+            console.log(`Error: Client ${data.userID} received flags.invalidRecipient`)
 
         } else {
             if(data.recipient === 'all'){ 
@@ -137,7 +143,14 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
-        console.log(`client #${userIDs.indexOf(socket.id) + 1} disconnected`);
+        // get the key of userAliases that has the value of socket.id
+        let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
+        delete userAliases[userAliasKey];
+
+        console.log(userAliases);
+
+
+        console.log(`Client ${socket.id} disconnected`);
         clients--;
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
