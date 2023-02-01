@@ -2,6 +2,7 @@
     "homepage": "https://rus1130.github.io/battleship-multiplayer",
     "dependencies": {
         "express": "^4.18.2",
+        "open": "^8.4.0",
         "socket.io": "^4.5.4"
     }
 }

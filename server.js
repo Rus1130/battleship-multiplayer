@@ -1,15 +1,23 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const open = require('open');
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
+let host = 'localhost';
+let port = 3000;
 
-http.listen(3000, () => {
-    console.log('Server started');
-});
+http.listen({
+    host: host,
+    port: port,
+    }, () => {
+        console.log(`Server started on ${host}:${port}`);
+        open(`http://${host}:${port}`, {app: "Chrome"});
+    }
+);
 
 
 let messageLog = [];
@@ -20,7 +28,8 @@ let userAliases = {};
 let rooms = {
     "Global": {
         type: 'public',
-        password: ''
+        password: '',
+        connectedUsers: 0,
     }
 };
 
@@ -28,16 +37,18 @@ let clients = 0;
 
 io.on('connection', (socket) => {
     clients++;
+    rooms["Global"].connectedUsers = clients;
 
     userAliases[socket.id] = socket.id;
 
-    io.emit('consoleMessage', `${userAliases[socket.id]} has connected.`);
+    socket.broadcast.emit('consoleMessage', `${userAliases[socket.id]} has connected.`);
 
 
     let roomID = 'Global';
 
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
+        io.to(socket.id).emit("refreshRoomDisplay", [roomID, rooms[roomID].connectedUsers])
     }, 50)
     
 
@@ -59,29 +70,36 @@ io.on('connection', (socket) => {
         if(rooms[data] === undefined){
             response = 'invalidRoomID';
         } else {
+            rooms[roomID].connectedUsers--;
             response = rooms[data]
-            roomID = data;
+            specifiedRoomID = data;
+            rooms[specifiedRoomID].connectedUsers++;
         }
 
-        io.to(socket.id).emit('roomSwitchResponse', [response, roomID]);
+        io.to(socket.id).emit('roomSwitchResponse', [response, specifiedRoomID]);
     });
 
     socket.on('createRoom', (data) => {
-        roomID = data[0]
         let roomType = data[1]
         let roomPassword = data[2]
 
-        if(rooms[roomID] !== undefined || roomID === null){
+        if(rooms[data[0]] !== undefined || data[0] === null){
             io.to(socket.id).emit('roomCreationResponse', 'roomIDTaken');
         } else if(roomType == null || (roomType != 'public' && roomType != 'private')){
             io.to(socket.id).emit('roomCreationResponse', 'invalidRoomType');
         } else if(roomType == 'private' && roomPassword == null){
             io.to(socket.id).emit('roomCreationResponse', 'invalidRoomPassword');
         } else {
+
+            rooms[roomID].connectedUsers--;
+            roomID = data[0]
+
             rooms[roomID] = {
                 type: roomType,
-                password: roomPassword
+                password: roomPassword,
+                connectedUsers: 1,
             }
+        
             io.to(socket.id).emit('roomCreationResponse', roomID);
         }
     })
@@ -177,6 +195,7 @@ io.on('connection', (socket) => {
         // get the key of userAliases that has the value of socket.id
 
         io.emit('consoleMessage', `${userAliases[socket.id]} has disconnected.`);
+        rooms[roomID].connectedUsers--;
 
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
