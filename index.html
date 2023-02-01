@@ -83,7 +83,8 @@
         "/room [roomID] - Switches to the specified room.",
         "/createroom [roomID] [public/private] [password] - Creates a new private room with the specified password. The room cannot have a password if it is public.",
         "/to [userID] - Sends a message to the specified user.",
-        '/exit - shorthand form /room Global'
+        '/exit - shorthand form /room Global',
+        "/alias [newAlias] - Changes your alias to the specified alias."
     ]
     
 
@@ -114,11 +115,6 @@
     function createNewMessage(user, time, date, message, recipient, selfMessage){
         let newMessage = document.createElement('div');
         newMessage.title = `${date} at ${time}`;
-        newMessage.onmouseup = (e) => {
-            if(e.button == 0 && input.value.split(" ")[0] == '/to'){
-                input.value += ` ${user} `
-            }
-        }
 
         let clientIdentifier = '';
         if(selfMessage) clientIdentifier = ' (You)';
@@ -212,6 +208,15 @@
             sendConsoleMessage(`You have created room "${roomID}".`)
         }
     }) 
+
+    socket.on("aliasChangeResponse", (data) => {
+        if(data == "aliasTaken"){
+            sendConsoleMessage("Alias is already taken.")
+        } else {
+            alias = data;
+            sendConsoleMessage(`Alias changed to ${alias}.`)
+        }
+    })
 
     const doNotSendMessageCommands = ['/room', '/createroom', '/pmg', '/help', '/prl', '/exit', '/alias']
 
@@ -327,7 +332,7 @@
             selfMessage = false;
             if(data.userID === userID) selfMessage = true;
 
-            let newMessage = createNewMessage(data.userID, data.time, data.date, data.message, data.recipient, selfMessage);
+            let newMessage = createNewMessage(data.alias, data.time, data.date, data.message, data.recipient, selfMessage);
             messages.prepend(newMessage);
         }
     });

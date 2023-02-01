@@ -77,7 +77,23 @@ io.on('connection', (socket) => {
     })
 
     socket.on('changeAlias', (data) => {
-        console.log(data)
+        // check if there is any other user with the same alias
+        let alias = data;
+        let userID = socket.id;
+        let aliasTaken = false;
+
+        Object.keys(userAliases).forEach((key) => {
+            if(userAliases[key] == alias){
+                aliasTaken = true;
+            }
+        });
+
+        if(aliasTaken){
+            io.to(socket.id).emit('aliasChangeResponse', 'aliasTaken');
+        } else {
+            userAliases[userID] = alias;
+            io.to(socket.id).emit('aliasChangeResponse', alias);
+        }
     })
 
 
@@ -111,8 +127,10 @@ io.on('connection', (socket) => {
     socket.on('clientMessageData', (data) => {
         let recipient = data.recipient;
         let userID = data.userID;
+        let alias = data.alias;
 
         let prematureData;
+        let matureData;
 
         if(data.message === ''){
             data.flags.invalidContent = true
