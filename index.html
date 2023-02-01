@@ -93,11 +93,14 @@
     const roomDisplay = document.getElementById('roomDisplay');
 
     let userID = undefined;
+    let alias = undefined;
+
     let roomID = 'Global';
 
     socket.on('userIDs', (data) => {
         if(userID === undefined){
             userID = socket.id
+            alias = socket.id
             console.log(`Your userID: ${userID}`)
         }
     });
@@ -113,7 +116,7 @@
         newMessage.title = `${date} at ${time}`;
         newMessage.onmouseup = (e) => {
             if(e.button == 0 && input.value.split(" ")[0] == '/to'){
-                input.value += ` ${socket.id} `
+                input.value += ` ${user} `
             }
         }
 
@@ -210,7 +213,7 @@
         }
     }) 
 
-    const doNotSendMessageCommands = ['/room', '/createroom', '/pmg', '/help', '/prl', '/exit']
+    const doNotSendMessageCommands = ['/room', '/createroom', '/pmg', '/help', '/prl', '/exit', '/alias']
 
     function beginMessagePropagation(){
         let recipient = 'all';
@@ -228,7 +231,7 @@
 
         }else if(command === '/to'){
             recipient = inputValue.split(' ')[1];
-            inputValue = inputValue.substring(5 + recipient.length);
+            inputValue = inputValue.split(' ')[2];
 
         } else if(command === '/room'){
             let id = inputValue.split(' ')[1];
@@ -244,9 +247,9 @@
         } else if(command === '/help'){
             sendConsoleMessage(commandDescriptions.join("<br>"))
 
-        } else if(command === '/displayname'){
-            let newDisplayName = inputValue.split(' ')[1];
-            socket.emit('changeDisplayName', newDisplayName)
+        } else if(command === '/alias'){
+            let newAlias = inputValue.split(' ')[1];
+            socket.emit('changeAlias', newAlias)
 
         } else if(command === '/exit'){
             if(roomID == 'Global') sendConsoleMessage('You are already in that room.');
@@ -261,12 +264,12 @@
         let time = `${String(_date.getHours()).padStart(2, '0')}:${String(_date.getMinutes()).padStart(2, '0')}:${String(_date.getSeconds()).padStart(2, '0')}`
         let clientMessageData = {
             userID: userID,
-            socketID: socket.id,
             message: inputValue,
             time: time,
             date: date,
             recipient: recipient,
             roomID: roomID,
+            alias: alias,
             flags: {
                 invalidRecipient: false,
                 invalidContent: false,

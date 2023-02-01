@@ -76,10 +76,12 @@ io.on('connection', (socket) => {
         }
     })
 
-    // changeDisplayName
+    socket.on('changeAlias', (data) => {
+        console.log(data)
+    })
 
 
-    socket.on('messageLogRequest', (data) => {
+    socket.on('messageLogRequest', () => {
         let userID = socket.id;
         let filteredMessageLog = [];
         messageLog.forEach((message) => {
@@ -107,30 +109,31 @@ io.on('connection', (socket) => {
 
 
     socket.on('clientMessageData', (data) => {
-        let recipientSocketID = data.recipient;
-        console.log(data.recipient, data.userID, recipientSocketID)
+        let recipient = data.recipient;
+        let userID = data.userID;
 
         let prematureData;
+
         if(data.message === ''){
             data.flags.invalidContent = true
             prematureData = data
-            io.to(socket.id).emit('newMessageData', prematureData);
+            io.to(userID).emit('newMessageData', prematureData);
             console.log(`Error: Client ${data.userID} received flags.invalidContent`)
 
-        } else if((data.recipient == undefined && data.recipient != 'all') || (data.recipient == data.userID)){
+        } else if((recipient == undefined && recipient != 'all') || (recipient == userID)){
             data.flags.invalidRecipient = true
             prematureData = data;
             io.to(socket.id).emit('newMessageData', prematureData);
             console.log(`Error: Client ${data.userID} received flags.invalidRecipient`)
 
         } else {
-            if(data.recipient === 'all'){ 
+            if(recipient === 'all'){ 
                 io.emit('newMessageData', data);
                 console.log('sent messageData to all clients')
             } else {
     
-                io.to(recipientSocketID).emit('newMessageData', data);
-                io.to(socket.id).emit('newMessageData', data);
+                io.to(recipient).emit('newMessageData', data);
+                io.to(userID).emit('newMessageData', data);
     
                 console.log('sent messageData to privileged clients')
             }
@@ -149,7 +152,7 @@ io.on('connection', (socket) => {
         delete userAliases[userAliasKey];
 
 
-        console.log(`Client ${socket.id} disconnected`);
+        console.log(`${socket.id} disconnected`);
         clients--;
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
