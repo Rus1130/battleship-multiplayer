@@ -97,13 +97,13 @@
 
     socket.on('userIDs', (data) => {
         if(userID === undefined){
-            userID = data[data.indexOf(socket.id)]
+            userID = socket.id
             console.log(`Your userID: ${userID}`)
         }
     });
 
     socket.on('refreshUserID', (data) => {
-        userID = data[data.indexOf(socket.id)]
+        userID = socket.id
     });
 
     sendConsoleMessage("Welcome to the chatroom! Type '/help' for a list of commands.")
@@ -243,6 +243,10 @@
 
         } else if(command === '/help'){
             sendConsoleMessage(commandDescriptions.join("<br>"))
+
+        } else if(command === '/displayname'){
+            let newDisplayName = inputValue.split(' ')[1];
+            socket.emit('changeDisplayName', newDisplayName)
 
         } else if(command === '/exit'){
             if(roomID == 'Global') sendConsoleMessage('You are already in that room.');

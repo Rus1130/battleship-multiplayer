@@ -31,7 +31,6 @@ io.on('connection', (socket) => {
     clients++;
 
     userAliases[socket.id] = socket.id;
-    console.log(userAliases);
 
     let roomID = 'Global';
 
@@ -76,6 +75,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('roomCreationResponse', roomID);
         }
     })
+
+    // changeDisplayName
 
 
     socket.on('messageLogRequest', (data) => {
@@ -146,8 +147,6 @@ io.on('connection', (socket) => {
         // get the key of userAliases that has the value of socket.id
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
-
-        console.log(userAliases);
 
 
         console.log(`Client ${socket.id} disconnected`);
