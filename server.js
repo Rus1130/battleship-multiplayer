@@ -37,14 +37,12 @@ let clients = 0;
 
 io.on('connection', (socket) => {
     clients++;
-    rooms["Global"].connectedUsers = clients;
-
+    
     userAliases[socket.id] = socket.id;
-
-    socket.broadcast.emit('consoleMessage', `${userAliases[socket.id]} has connected.`);
 
 
     let roomID = 'Global';
+    rooms[roomID].connectedUsers++;
 
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
@@ -72,11 +70,11 @@ io.on('connection', (socket) => {
         } else {
             rooms[roomID].connectedUsers--;
             response = rooms[data]
-            specifiedRoomID = data;
-            rooms[specifiedRoomID].connectedUsers++;
+            roomID = data;
+            rooms[roomID].connectedUsers++;
         }
 
-        io.to(socket.id).emit('roomSwitchResponse', [response, specifiedRoomID]);
+        io.to(socket.id).emit('roomSwitchResponse', [response, roomID]);
     });
 
     socket.on('createRoom', (data) => {
@@ -90,17 +88,19 @@ io.on('connection', (socket) => {
         } else if(roomType == 'private' && roomPassword == null){
             io.to(socket.id).emit('roomCreationResponse', 'invalidRoomPassword');
         } else {
-
             rooms[roomID].connectedUsers--;
             roomID = data[0]
 
             rooms[roomID] = {
                 type: roomType,
                 password: roomPassword,
-                connectedUsers: 1,
+                connectedUsers: 0,
             }
+
+            rooms[roomID].connectedUsers++;
         
             io.to(socket.id).emit('roomCreationResponse', roomID);
+            io.to(socket.id).emit("refreshRoomDisplay", [roomID, rooms[roomID].connectedUsers])
         }
     })
 
@@ -192,10 +192,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
-        // get the key of userAliases that has the value of socket.id
-
-        io.emit('consoleMessage', `${userAliases[socket.id]} has disconnected.`);
-        rooms[roomID].connectedUsers--;
 
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
@@ -203,6 +199,7 @@ io.on('connection', (socket) => {
 
         console.log(`${socket.id} disconnected`);
         clients--;
+        rooms[roomID].connectedUsers--;
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
         io.emit('userIDs', userIDs);
