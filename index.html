@@ -98,6 +98,10 @@
 
     let roomID = 'Global';
 
+    socket.on('connect', () => {
+        socket.emit("sendLocalConsoleMessage", "Welcome to the chatroom! Type '/help' for a list of commands.")
+    });
+
     socket.on('userIDs', (data) => {
         if(userID === undefined){
             userID = socket.id
@@ -109,8 +113,6 @@
     socket.on('refreshUserID', (data) => {
         userID = socket.id
     });
-
-    sendConsoleMessage("Welcome to the chatroom! Type '/help' for a list of commands.")
 
     function createNewMessage(user, time, date, message, recipient, selfMessage){
         let newMessage = document.createElement('div');
@@ -129,7 +131,6 @@
             }
         }
 
-
         newMessage.innerHTML = `
             <div class='message'>
                 <div style="display: grid;">
@@ -146,7 +147,7 @@
 
     socket.on('roomSwitchResponse', (data) => {
         if(data[0] == 'invalidRoomID'){
-            sendConsoleMessage('No room with that ID. Create it with /createroom.')
+            socket.emit("sendLocalConsoleMessage", 'No room with that ID. Create it with /createroom.')
         } else {
             if(data[0].type == 'public'){
                 roomID = data[1];
@@ -155,21 +156,23 @@
 
                 socket.emit('messageLogRequest', socket.id);
                 setTimeout(() => {
-                    sendConsoleMessage(`You have joined room "${roomID}".`)
+                    socket.emit("sendLocalConsoleMessage", `You have joined room "${roomID}".`)
+                    socket.emit("sendGlobalConsoleMessage", `${alias} joined room "${roomID}".`)
                 }, 1)
-                console.log(`Client #${userID} has switched to public room ${roomID}.`)
+                console.log(`Client ${userID} has switched to public room ${roomID}.`)
                 
             } else {
                 let password = prompt('Enter password for room:');
                 if(password != data[0].password){
-                    sendConsoleMessage('Incorrect password.')
+                    socket.emit("sendLocalConsoleMessage", 'Incorrect password.')
                 } else {
                     roomID = data[1];
                     roomDisplay.innerHTML = `Room: ${roomID}`;
                     messages.innerHTML = '';
                     socket.emit('messageLogRequest', socket.id);
                     setTimeout(() => {
-                        sendConsoleMessage(`You have joined room "${roomID}".`)
+                        socket.emit("sendLocalConsoleMessage", `You have joined room "${roomID}".`)
+                        socket.emit("sendGlobalConsoleMessage", `${alias} joined room "${roomID}".`)
                     }, 1)
                     console.log(`Client #${userID} has switched to private room ${roomID}.`)
                 }
@@ -177,7 +180,7 @@
         }
     })
 
-    function sendConsoleMessage(message){
+    socket.on('consoleMessage', (data) => {
         let newMessage = document.createElement('div');
         newMessage.innerHTML = `
             <div class='message'>
@@ -187,34 +190,33 @@
                     </div>
                 </div>
                 <br>
-                <div id="body">${message}</div>
+                <div id="body">${data}</div>
             </div>
         `;
         messages.prepend(newMessage);
-    }
+    })
 
     socket.on('roomCreationResponse', (data) => {
         if(data == 'roomIDTaken'){
-            sendConsoleMessage('Room ID is already taken.')
+            socket.emit("sendLocalConsoleMessage", 'Room ID is already taken.')
         } else if(data == 'invalidRoomType'){
-            sendConsoleMessage('Invalid room type.')
+            socket.emit("sendLocalConsoleMessage", 'Invalid room type.')
         } else if (data == 'invalidRoomPassword'){
-            sendConsoleMessage('Invalid room password.')
+            socket.emit("sendLocalConsoleMessage", 'Invalid room password.')
         } else {
             roomID = data;
             roomDisplay.innerHTML = `Room: ${roomID}`;
             messages.innerHTML = '';
-            socket.emit('messageLogRequest', socket.id);
-            sendConsoleMessage(`You have created room "${roomID}".`)
+            socket.emit("sendLocalConsoleMessage", `You have created room "${roomID}".`)
         }
     }) 
 
     socket.on("aliasChangeResponse", (data) => {
         if(data == "aliasTaken"){
-            sendConsoleMessage("Alias is already taken.")
+            socket.emit("sendLocalConsoleMessage", "Alias is already taken.")
         } else {
             alias = data;
-            sendConsoleMessage(`Alias changed to ${alias}.`)
+            socket.emit("sendLocalConsoleMessage", `Alias changed to "${alias}".`)
         }
     })
 
@@ -240,7 +242,7 @@
 
         } else if(command === '/room'){
             let id = inputValue.split(' ')[1];
-            if(roomID == id) sendConsoleMessage('You are already in that room.')
+            if(roomID == id) socket.emit("sendLocalConsoleMessage", 'You are already in that room.')
             else socket.emit('switchRoom', id)
 
         } else if(command === '/createroom'){
@@ -250,14 +252,14 @@
             socket.emit('createRoom', [roomID, roomType, roomPassword])
 
         } else if(command === '/help'){
-            sendConsoleMessage(commandDescriptions.join("<br>"))
+            socket.emit("sendLocalConsoleMessage", commandDescriptions.join("<br>"))
 
         } else if(command === '/alias'){
             let newAlias = inputValue.split(' ')[1];
             socket.emit('changeAlias', newAlias)
 
         } else if(command === '/exit'){
-            if(roomID == 'Global') sendConsoleMessage('You are already in that room.');
+            if(roomID == 'Global') socket.emit("sendLocalConsoleMessage", 'You are already in that room.');
             else socket.emit('switchRoom', 'Global')
         }
         
@@ -324,8 +326,8 @@
     });
 
     socket.on('newMessageData', (data) => {
-        if(data.flags.invalidContent) return sendConsoleMessage('Invalid message content.');
-        if(data.flags.invalidRecipient) return sendConsoleMessage('Invalid recipient.');
+        if(data.flags.invalidContent) return socket.emit("sendLocalConsoleMessage", 'Invalid message content.');
+        if(data.flags.invalidRecipient) return socket.emit("sendLocalConsoleMessage", 'Invalid recipient.');
 
         if(data.roomID == roomID){
             console.log("received messageData from server");

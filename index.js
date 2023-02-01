@@ -16,7 +16,6 @@ let messageLog = [];
 
 let userIDs = [];
 let userAliases = {};
-let displayNames = {};
 
 let rooms = {
     "Global": {
@@ -32,6 +31,9 @@ io.on('connection', (socket) => {
 
     userAliases[socket.id] = socket.id;
 
+    io.emit('consoleMessage', `${userAliases[socket.id]} has connected.`);
+
+
     let roomID = 'Global';
 
     setInterval(() => {
@@ -43,6 +45,14 @@ io.on('connection', (socket) => {
     io.emit('userIDs', userIDs);
 
     console.log(`${socket.id} connected`);
+
+    socket.on("sendLocalConsoleMessage", (data) => {
+        io.to(socket.id).emit('consoleMessage', data);
+    })
+
+    socket.on("sendGlobalConsoleMessage", (data) => {
+        socket.broadcast.emit('consoleMessage', data);
+    })
 
     socket.on('switchRoom', (data) => {
         let response;
@@ -130,7 +140,6 @@ io.on('connection', (socket) => {
         let alias = data.alias;
 
         let prematureData;
-        let matureData;
 
         if(data.message === ''){
             data.flags.invalidContent = true
@@ -166,6 +175,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         // get the key of userAliases that has the value of socket.id
+
+        io.emit('consoleMessage', `${userAliases[socket.id]} has disconnected.`);
+
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
 
