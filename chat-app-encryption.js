@@ -32,6 +32,6 @@ function encrypt(message, recipient, expirationInSecs){
 }
 
 
-function decrypt(encryptedBody, key, currentTimeMs){
+function decrypt(body, recipient, currentTimeMs){
     console.log('decrypting message')
 }
