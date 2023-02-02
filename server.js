@@ -1,28 +1,21 @@
-const app = require('express')();
-app.set('trust proxy', true);
+const express = require('express');
+const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const open = require('open');
 
+app.use(express.static(__dirname + '/public'));
+
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.render('/index.html');
 });
 
-let host = 'localhost';
-let port = 3000;
 
 // https://socket.io/docs/v3/handling-cors/
 
-http.listen({
-    host: host,
-    port: port,
-    }, () => {
-        console.log(`Server started on ${host}:${port}`);
-        
-        // var request = http.request({host: host, port: port});
-        // request.setHeader('Origin', 'http://localhost:3000');
-
-        open(`http://${host}:${port}`, {app: "Chrome"});
+http.listen(80, () => {
+        console.log(`Server started`);
+        // open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
 
