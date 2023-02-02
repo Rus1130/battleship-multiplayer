@@ -10,12 +10,14 @@ app.get('/', function(req, res){
 let host = 'localhost';
 let port = 3000;
 
+// https://socket.io/docs/v3/handling-cors/
+
 http.listen({
     host: host,
     port: port,
     }, () => {
         console.log(`Server started on ${host}:${port}`);
-        open(`http://${host}:${port}`, {app: "Chrome"});
+        open(`https://${host}:${port}`, {app: "Chrome"});
     }
 );
 
