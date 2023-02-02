@@ -1,6 +1,6 @@
 [O] - public/private rooms
     [O] - room passwords (if private)
 [O] - system messages
-[~] - display name
+[O] - display name
 
 [X] - minigames
