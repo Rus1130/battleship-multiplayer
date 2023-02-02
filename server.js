@@ -1,4 +1,5 @@
 const app = require('express')();
+app.set('trust proxy', true);
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const open = require('open');
@@ -17,6 +18,10 @@ http.listen({
     port: port,
     }, () => {
         console.log(`Server started on ${host}:${port}`);
+        
+        // var request = http.request({host: host, port: port});
+        // request.setHeader('Origin', 'http://localhost:3000');
+
         open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
