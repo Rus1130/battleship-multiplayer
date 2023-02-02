@@ -164,7 +164,6 @@ io.on('connection', (socket) => {
     socket.on('clientMessageData', (data) => {
         let recipient = data.recipient;
         let userID = data.userID;
-        let alias = data.alias;
 
         let prematureData;
 
