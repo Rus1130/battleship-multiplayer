@@ -43,6 +43,7 @@ io.on('connection', (socket) => {
 
     let roomID = 'Global';
     rooms[roomID].connectedUsers++;
+    socket.join(roomID);
 
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
@@ -60,7 +61,8 @@ io.on('connection', (socket) => {
     })
 
     socket.on("sendGlobalConsoleMessage", (data) => {
-        socket.broadcast.emit('consoleMessage', data);
+        // send to all users in the same room
+        io.to(roomID).emit('consoleMessage', data);
     })
 
     socket.on('switchRoom', (data) => {
@@ -69,9 +71,11 @@ io.on('connection', (socket) => {
             response = 'invalidRoomID';
         } else {
             rooms[roomID].connectedUsers--;
+            socket.leave(roomID);
             response = rooms[data]
             roomID = data;
             rooms[roomID].connectedUsers++;
+            socket.join(roomID);
         }
 
         io.to(socket.id).emit('roomSwitchResponse', [response, roomID]);
@@ -89,7 +93,10 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('roomCreationResponse', 'invalidRoomPassword');
         } else {
             rooms[roomID].connectedUsers--;
+            socket.leave(roomID);
+
             roomID = data[0]
+            socket.join(roomID);
 
             rooms[roomID] = {
                 type: roomType,
@@ -199,7 +206,10 @@ io.on('connection', (socket) => {
 
         console.log(`${socket.id} disconnected`);
         clients--;
+
+        
         rooms[roomID].connectedUsers--;
+
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
         io.emit('userIDs', userIDs);

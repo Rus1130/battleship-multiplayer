@@ -66,7 +66,7 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
-    <div id="roomDisplay">Room: Global | 0 Users In This Room</div>
+    <div id="roomDisplay"></div>
     <div id="messages"></div>
     <div id="messageSendUI">
         <textarea id="input"></textarea>
@@ -103,10 +103,15 @@
         socket.emit("sendLocalConsoleMessage", "Welcome to the chatroom! Type '/help' for a list of commands.")
     });
 
+    socket.on('disconnect', () => {
+        socket.emit("sendGlobalConsoleMessage", `${alias} left.`)
+    });
+
     socket.on('userIDs', (data) => {
         if(userID === undefined){
             userID = socket.id
             alias = socket.id
+            socket.emit("sendGlobalConsoleMessage", `${alias} joined.`)
             console.log(`Your userID: ${userID}`)
         }
     });
@@ -155,6 +160,8 @@
             socket.emit("sendLocalConsoleMessage", 'No room with that ID. Create it with /createroom.')
         } else {
             if(data[0].type == 'public'){
+                socket.emit("sendGlobalConsoleMessage", `${alias} left room "${roomID}".`)
+
                 roomID = data[1];
                 messages.innerHTML = '';
 
@@ -170,6 +177,8 @@
                 if(password != data[0].password){
                     socket.emit("sendLocalConsoleMessage", 'Incorrect password.')
                 } else {
+                    socket.emit("sendGlobalConsoleMessage", `${alias} left room "${roomID}".`)
+
                     roomID = data[1];
                     messages.innerHTML = '';
                     socket.emit('messageLogRequest', socket.id);
