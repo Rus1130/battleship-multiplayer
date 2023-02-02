@@ -17,7 +17,7 @@ http.listen({
     port: port,
     }, () => {
         console.log(`Server started on ${host}:${port}`);
-        open(`https://${host}:${port}`, {app: "Chrome"});
+        open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
 
