@@ -62,9 +62,8 @@ io.on('connection', (socket) => {
                 if(clients === 0){
                     http.close();
                     console.log('Server closed due to inactivity.');
-                    process.exit();
                 }
-            }, 3600000);
+            }, 1000);
         }
     }, 50)
     
