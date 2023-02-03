@@ -4,8 +4,11 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const open = require('open');
 
+let blockConnection = false;
+
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+    if(blockConnection) return res.sendFile(__dirname + '/serverClosed.html');
+    res.sendFile(__dirname + '/index.html');
 });
 
 let host = 'localhost';
@@ -41,8 +44,24 @@ let rooms = {
 };
 
 let clients = 0;
+let clientQueue = 0;
+let requestedClients = [];
 
 io.on('connection', (socket) => {
+    
+    socket.on('requestOpenServer', () => {
+        if(requestedClients.indexOf(socket.id) === -1){
+            clientQueue++;
+            requestedClients.push(socket.id);
+            console.log(clients)
+        }
+
+        if(clientQueue > 5){
+            blockConnection = false;
+        }
+    });
+
+    if(blockConnection) return;
     clients++;
     
     userAliases[socket.id] = socket.id;
@@ -59,13 +78,10 @@ io.on('connection', (socket) => {
         // if there are no clients for 1 hour, close the server
         if(clients === 0){
             setTimeout(() => {
-                if(clients === 0){
-                    http.close();
-                    console.log('Server closed due to inactivity.');
-                }
+                blockConnection = true;
             }, 1000);
         }
-    }, 50)
+    }, 50);
     
 
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
@@ -215,6 +231,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
+        if(blockConnection) return;
 
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
