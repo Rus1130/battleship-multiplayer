@@ -4,23 +4,24 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const open = require('open');
 
-let blockConnection = true;
+let blockConnection = false;
+
+const maintainance = true;
 
 app.get('/', function(req, res){
-    if(blockConnection) return res.sendFile(__dirname + '/serverClosed.html');
-    else res.sendFile(__dirname + '/index.html');
+    if(maintainance) return res.sendFile('/private/serverMaintenance.html', {root: '../'});
+    if(blockConnection) return res.sendFile('/private/serverClosed.html', {root: '../'});
+    res.sendFile('/public/index.html', {root: '../'});
 });
 
 let host = 'localhost';
 let port = 3000;
 
-// https://socket.io/docs/v3/handling-cors/
-
 http.listen({
     host: host,
     port: port,
     }, () => {
-        console.log(`Server started on ${host}:${port}`);
+        console.log(`Server started on ${host}:${port} (${new Date().toLocaleString()})`);
         open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
@@ -40,23 +41,9 @@ let rooms = {
 };
 
 let clients = 0;
-let clientQueue = 0;
-let requestedClients = [];
+
 
 io.on('connection', (socket) => {
-    
-    socket.on('requestOpenServer', () => {
-        if(requestedClients.indexOf(socket.id) === -1){
-            clientQueue++;
-            requestedClients.push(socket.id);
-            console.log(clientQueue)
-        }
-
-        if(clientQueue >= 1){
-            blockConnection = false;
-        }
-    });
-
     if(blockConnection) return;
     clients++;
     
@@ -67,15 +54,20 @@ io.on('connection', (socket) => {
     rooms[roomID].connectedUsers++;
     socket.join(roomID);
 
+    let inacTimerAlert = false;
+
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
         io.to(socket.id).emit("refreshRoomDisplay", [roomID, rooms[roomID].connectedUsers])
 
         // if there are no clients for 1 hour, close the server
         if(clients === 0){
+            if(!inacTimerAlert) console.log(`beginning inactivity timer (${new Date().toLocaleString()})`);
+            inacTimerAlert = true;
             setTimeout(() => {
+                if(!blockConnection) console.log(`================================ Server closed due to inactivity. ================================ (${new Date().toLocaleString()})`);
                 blockConnection = true;
-            }, 1000);
+            }, 3600000);
         }
     }, 50);
     
@@ -83,14 +75,13 @@ io.on('connection', (socket) => {
     userIDs.indexOf("disconnected") === -1 ? userIDs.push(socket.id) : userIDs[userIDs.findIndex(user => user === "disconnected")] = socket.id;
     io.emit('userIDs', userIDs);
 
-    console.log(`${socket.id} connected`);
+    console.log(`${socket.id} connected (${new Date().toLocaleString()})`);
 
     socket.on("sendLocalConsoleMessage", (data) => {
         io.to(socket.id).emit('consoleMessage', data);
     })
 
     socket.on("sendGlobalConsoleMessage", (data) => {
-        // send to all users in the same room
         io.to(roomID).emit('consoleMessage', data);
     })
 
@@ -174,16 +165,16 @@ io.on('connection', (socket) => {
         });
 
         io.to(socket.id).emit('messageLogResponse', filteredMessageLog);
-        console.log(`sent messageLog to client ${socket.id}`)
+        console.log(`sent messageLog to client ${socket.id} (${new Date().toLocaleString()})`)
     });
 
     socket.on('printMessageLog', (data) => {
-        console.log(`Client ${data} requested message log:`);
+        console.log(`Client ${data} requested message log: (${new Date().toLocaleString()})`);
         console.log(messageLog);
     })
 
     socket.on("printRoomList", (data) => {
-        console.log(`Client ${data} requested room list:`);
+        console.log(`Client ${data} requested room list: (${new Date().toLocaleString()})`);
         console.log(rooms);
     })
 
@@ -198,24 +189,24 @@ io.on('connection', (socket) => {
             data.flags.invalidContent = true
             prematureData = data
             io.to(userID).emit('newMessageData', prematureData);
-            console.log(`Error: Client ${data.userID} received flags.invalidContent`)
+            console.log(`Error: Client ${data.userID} received flags.invalidContent (${new Date().toLocaleString()})`)
 
         } else if((recipient == undefined && recipient != 'all') || (recipient == userID)){
             data.flags.invalidRecipient = true
             prematureData = data;
             io.to(socket.id).emit('newMessageData', prematureData);
-            console.log(`Error: Client ${data.userID} received flags.invalidRecipient`)
+            console.log(`Error: Client ${data.userID} received flags.invalidRecipient (${new Date().toLocaleString()})`)
 
         } else {
             if(recipient === 'all'){ 
                 io.emit('newMessageData', data);
-                console.log('sent messageData to all clients')
+                console.log(`sent messageData to all clients (${new Date().toLocaleString()})`)
             } else {
     
                 io.to(recipient).emit('newMessageData', data);
                 io.to(userID).emit('newMessageData', data);
     
-                console.log('sent messageData to privileged clients')
+                console.log(`sent messageData to privileged clients (${new Date().toLocaleString()})`)
             }
 
             messageLog.push(data);
@@ -229,16 +220,19 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         if(blockConnection) return;
 
+        io.to(roomID).emit('consoleMessage', `${userAliases[socket.id]} left.`);
+
         let userAliasKey = Object.keys(userAliases).find(key => userAliases[key] === socket.id);
         delete userAliases[userAliasKey];
 
 
-        console.log(`${socket.id} disconnected`);
+        console.log(`${socket.id} disconnected. (${new Date().toLocaleString()})`);
         clients--;
 
         
         rooms[roomID].connectedUsers--;
 
+        
         
         userIDs[userIDs.findIndex(user => user === socket.id)] = "disconnected";
         io.emit('userIDs', userIDs);

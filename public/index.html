@@ -103,10 +103,6 @@
         socket.emit("sendLocalConsoleMessage", "Welcome to the chatroom! Type '/help' for a list of commands.")
     });
 
-    socket.on('disconnect', () => {
-        socket.emit("sendGlobalConsoleMessage", `${alias} left.`)
-    });
-
     socket.on('userIDs', (data) => {
         if(userID === undefined){
             userID = socket.id
