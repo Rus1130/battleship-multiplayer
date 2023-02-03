@@ -55,6 +55,17 @@ io.on('connection', (socket) => {
     setInterval(() => {
         io.emit('refreshUserID', userIDs)
         io.to(socket.id).emit("refreshRoomDisplay", [roomID, rooms[roomID].connectedUsers])
+
+        // if there are no clients for 1 hour, close the server
+        if(clients === 0){
+            setTimeout(() => {
+                if(clients === 0){
+                    http.close();
+                    console.log('Server closed due to inactivity.');
+                    process.exit();
+                }
+            }, 3600000);
+        }
     }, 50)
     
 
