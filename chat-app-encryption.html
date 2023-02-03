@@ -8,5 +8,7 @@
 
 </body>
 <script type="module">
-    console.log(encrypt("Hello, world!", "user", 100))
+    let encrypted = encrypt("Hello, world!", "user", 100)
+    console.log(encrypted)
+    console.log(decrypt(encrypted, 'user2'))
 </script>
