@@ -1,37 +1,35 @@
-function encrypt(message, recipient, expirationInSecs){
-    let plainMessage = message.split("").map((char) => char.charCodeAt(0))
-    let plainRecipient = recipient.split("").map((char) => char.charCodeAt(0))
-    let plainExpiration = expirationInSecs.toString().split("").map((char) => char.charCodeAt(0))
+function toBase100(number){
+    let base100 = '123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+{}|"<>?[];\',./`~¡¹²³£¢¬¥§µ×÷'
+    let result = ''
 
-
-    let shiftProducts = {
-        message: [],
-        recipient: [],
-        expiration: []
+    while(number > 0){
+        result += base100[number % 100]
+        number = Math.floor(number / 100)
     }
 
-    let shiftRemainders = {
-        message: [],
-        recipient: [],
-        expiration: []
+    if(result.length == 0) result = '0'
+
+    return result
+}
+
+function fromBase100(string){
+    let base100 = '123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+{}|"<>?[];\',./`~¡¹²³£¢¬¥§µ×÷'
+    let result = 0
+
+    for(let i = 0; i < string.length; i++){
+        result += base100.indexOf(string[i]) * Math.pow(100, i)
     }
 
-    /*
-
-        72 >> 5 = 2
-        2 << 5 = 64
-
-        shiftProducts = 2
-        shiftRemainders = 8
-
-
-    */
-
-    console.log(plainMessage, plainRecipient, plainExpiration)
-    return [shiftProducts, shiftRemainders]
+    return result
 }
 
 
-function decrypt(body, recipient, currentTimeMs){
-    console.log('decrypting message')
+
+function encrypt(message, recipient, expirationInSecs){
+
+}
+
+
+function decrypt(body, decrypter, currentTimeMs){
+
 }
