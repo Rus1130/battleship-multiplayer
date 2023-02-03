@@ -4,11 +4,11 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const open = require('open');
 
-let blockConnection = false;
+let blockConnection = true;
 
 app.get('/', function(req, res){
     if(blockConnection) return res.sendFile(__dirname + '/serverClosed.html');
-    res.sendFile(__dirname + '/index.html');
+    else res.sendFile(__dirname + '/index.html');
 });
 
 let host = 'localhost';
@@ -21,10 +21,6 @@ http.listen({
     port: port,
     }, () => {
         console.log(`Server started on ${host}:${port}`);
-        
-        // var request = http.request({host: host, port: port});
-        // request.setHeader('Origin', 'http://localhost:3000');
-
         open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
@@ -53,10 +49,10 @@ io.on('connection', (socket) => {
         if(requestedClients.indexOf(socket.id) === -1){
             clientQueue++;
             requestedClients.push(socket.id);
-            console.log(clients)
+            console.log(clientQueue)
         }
 
-        if(clientQueue > 5){
+        if(clientQueue >= 1){
             blockConnection = false;
         }
     });
