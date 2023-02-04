@@ -6,7 +6,7 @@ const open = require('open');
 
 let blockConnection = false;
 
-const maintainance = true;
+const maintainance = false;
 
 app.get('/', function(req, res){
     if(maintainance) return res.sendFile('/private/serverMaintenance.html', {root: '../'});
