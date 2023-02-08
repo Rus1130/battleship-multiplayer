@@ -2,7 +2,6 @@ const app = require('express')();
 app.set('trust proxy', true);
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const open = require('open');
 
 let blockConnection = false;
 
@@ -22,7 +21,6 @@ http.listen({
     port: port,
     }, () => {
         console.log(`Server started on ${host}:${port} (${new Date().toLocaleString()})`);
-        open(`http://${host}:${port}`, {app: "Chrome"});
     }
 );
 
